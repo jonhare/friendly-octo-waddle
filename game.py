@@ -19,7 +19,6 @@ import numpy as np
 #
 #     print(grid)
 
-
 class Game:
     def __init__(self, shape=(6, 7), n_connect=4):
         self.board = np.zeros(shape, dtype=np.int32)
@@ -106,16 +105,22 @@ class Game:
                 or self.check_left_right(r, c))
 
     def add_piece(self, c, p):
-        # In the case of a full column
-        if self.board[0, c] != 0:
-            return -1
+        """
+        Add a piece to column c and return the row. And return -1 if the column is full.
+        """
+        counter = self.board.shape[0] - 1
 
-        for r in range(1, self.board.shape[0]):
-            if self.board[r, c] != 0:
-                self.board[r - 1, c] = p
-                return r - 1
+        while counter >= 0 and self.board[counter, c] != 0:
+            counter -= 1
 
-        # When the entire column is empty
-        r = self.board.shape[0]
-        self.board[r - 1, c] = p
-        return r - 1
+        if counter != -1:
+            self.board[counter, c] = p
+
+        return counter
+
+    def __repr__(self):
+        # TODO:
+        # want to print out the board; at least the player numbers in the correct grid positions
+        # maybe " " for bank spots rather than 0
+        # print out the column numbers too
+
