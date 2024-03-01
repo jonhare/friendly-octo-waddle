@@ -118,9 +118,34 @@ class Game:
 
         return counter
 
-    def __repr__(self):
-        # TODO:
-        # want to print out the board; at least the player numbers in the correct grid positions
-        # maybe " " for bank spots rather than 0
-        # print out the column numbers too
+    def check_draw(self):
+        return (self.board[0] != 0).any()
 
+    def __repr__(self):
+        printed_board = ""
+        rows, columns = self.board.shape
+
+        printed_board += "| "
+        for c in range(columns):
+            printed_board += str(c) + " "
+        printed_board += "|\n"
+
+        for r in range(rows):
+            printed_board += "| "
+            for c in range(columns):
+                if self.board[r][c] == 0:
+                    printed_board += "  "
+                else:
+                    printed_board += str(self.board[r][c]) + " "
+            printed_board += "|\n"
+
+        return printed_board
+
+
+game = Game()
+p = 1
+while True:
+    print(game)
+    move = int(input(f"Player {p} select your column "))
+    game.add_piece(move,p)
+    p = 2 if p == 1 else 1
