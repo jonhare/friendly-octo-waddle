@@ -1,23 +1,6 @@
 import numpy as np
+import argparse
 
-
-# grid = np.zeros((6, 7), dtype=np.int32)
-# column = 1
-#
-# while column != -1:
-#     column = int(input("Enter a column: "))
-#     token_placed = False
-#     i = grid.shape[0] - 1
-#     while not token_placed and i >= 0:
-#         current_position = grid[i, column]
-#         if current_position == 0:
-#             grid[i, column] = 1
-#             token_placed = True
-#         i -= 1
-#     if not token_placed:
-#         print("Column full!")
-#
-#     print(grid)
 
 class Game:
     def __init__(self, shape=(6, 7), n_connect=4):
@@ -106,8 +89,10 @@ class Game:
 
     def add_piece(self, c, p):
         """
-        Add a piece to column c and return the row. And return -1 if the column is full.
+        Add a piece to column c and return the row. And return -1 if the column is full or the column is out of bounds.
         """
+        if c < 0 or c >= self.board.shape[1]:
+            return -1
         counter = self.board.shape[0] - 1
 
         while counter >= 0 and self.board[counter, c] != 0:
@@ -119,7 +104,7 @@ class Game:
         return counter
 
     def check_draw(self):
-        return (self.board[0] != 0).any()
+        return (self.board[0] != 0).all()
 
     def __repr__(self):
         printed_board = ""
@@ -142,10 +127,37 @@ class Game:
         return printed_board
 
 
-game = Game()
+def get_human_input(prompt):
+    while True:
+        raw = input(prompt)
+        if raw.isnumeric():
+            return int(raw)
+        print("Invalid input")
+
+
+parser = argparse.ArgumentParser(description='Connect-4 Game')
+parser.add_argument('--nrows', type=int, default=6)
+parser.add_argument('--ncols', type=int, default=7)
+parser.add_argument('--nconnect', type=int, default=4)
+flags = parser.parse_args()
+
+
+game = Game(shape=(flags.nrows, flags.ncols), n_connect=flags.nconnect)
 p = 1
+print(game)
 while True:
+    move = get_human_input(f"Player {p} select your column ")
+    while r := game.add_piece(move, p):
+        if r != -1:
+            break
+        move = get_human_input(f"Invalid Move - Player {p} select your column ")
     print(game)
-    move = int(input(f"Player {p} select your column "))
-    game.add_piece(move,p)
+    if game.check_all(r, move):
+        print(f"Player {p} wins!")
+        break
+
+    if game.check_draw():
+        print("Draw has been reached")
+        break
+
     p = 2 if p == 1 else 1
