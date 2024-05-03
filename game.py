@@ -1,5 +1,6 @@
 import numpy as np
 import argparse
+import time
 
 
 class Game:
@@ -127,6 +128,71 @@ class Game:
         return printed_board
 
 
+class Player:
+    def __init__(self):
+        pass
+
+    def move(self, game):
+        pass
+
+
+class HumanPlayer(Player):
+    def __init__(self, id):
+        super().__init__()
+        self.id = id
+
+    def move(self, game):
+        move = get_human_input(f"Player {self.id} select your column ")
+        while r := game.add_piece(move, self.id):
+            if r != -1:
+                break
+            move = get_human_input(f"Invalid Move - Player {p} select your column ")
+        return move, r
+
+class RandomPlayer(Player):
+
+    def __init__(self, id):
+        super().__init__()
+        self.id = id
+
+    def move(self, game):
+        move = np.random.randint(0, game.board.shape[1])
+        while r := game.add_piece(move, self.id):
+            if r != -1:
+                break
+            move = np.random.randint(0, game.board.shape[1])
+        time.sleep(1)
+        return move, r
+
+
+
+def norm(arr):
+    return arr #TODO: create normalisation function
+
+
+class IntelligentPlayer(Player):
+
+    def __init__(self, id):
+        super().__init__()
+        self.id = id
+        self.qtable = dict()
+        self.sample = False
+
+    def move(self, game):
+        current_state = game.board.tostring()
+        if self.sample:
+            np.random.choice(list(range(game.board.shape[1])), p=norm(self.qtable[current_state]))
+        else:
+            move = self.qtable[current_state].argmax()
+        while r := game.add_piece(move, self.id):
+            if r != -1:
+                break
+            move = np.random.randint(0, game.board.shape[1])
+        time.sleep(1)
+        return move, r
+
+
+
 def get_human_input(prompt):
     while True:
         raw = input(prompt)
@@ -139,18 +205,24 @@ parser = argparse.ArgumentParser(description='Connect-4 Game')
 parser.add_argument('--nrows', type=int, default=6)
 parser.add_argument('--ncols', type=int, default=7)
 parser.add_argument('--nconnect', type=int, default=4)
+parser.add_argument('--player1', type=str, default="human")
+parser.add_argument('--player2', type=str, default="random")
 flags = parser.parse_args()
 
 
+def create_player(type, id):
+    type = type.capitalize() + "Player"
+    return globals()[type](id)
+
+
 game = Game(shape=(flags.nrows, flags.ncols), n_connect=flags.nconnect)
+players = [create_player(flags.player1, 1), create_player(flags.player2, 2)]
+
 p = 1
 print(game)
 while True:
-    move = get_human_input(f"Player {p} select your column ")
-    while r := game.add_piece(move, p):
-        if r != -1:
-            break
-        move = get_human_input(f"Invalid Move - Player {p} select your column ")
+    move, r = players[p - 1].move(game)
+
     print(game)
     if game.check_all(r, move):
         print(f"Player {p} wins!")
